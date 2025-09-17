@@ -21,32 +21,50 @@ export const searchAPI = async (query) => {
       return data.results || [];
     } catch (error) {
       console.error('Search API error:', error);
-      throw error; // Propagate error for better error handling
+      throw error;
     }
-  };
-  
-  // API call for source image
-  export const sourceAPI = async (source, pageNo, setLoadingImage) => {
+};
+
+// API call for source image - Updated to match exact Postman format
+export const sourceAPI = async (source, pageNo, setLoadingImage) => {
     try {
       if (setLoadingImage) {
         setLoadingImage(true);
       }
       
-      const response = await fetch(`${API_BASE_URL}/source`, {
-        method: "POST",
-        headers: {  
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ source, pageNo }),
+      const myHeaders = new Headers();
+      myHeaders.append("Content-Type", "application/json");
+      
+      const raw = JSON.stringify({
+        "source": source,
+        "pageNo": pageNo
       });
       
+      const requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        body: raw,
+        redirect: "follow"
+      };
+      
+      const response = await fetch(`${API_BASE_URL}/source`, requestOptions);
+      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || 'Source API failed');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const data = await response.json();
-      return data.image;
+      const result = await response.text();
+      console.log(result);
+      
+      // Try to parse as JSON if possible, otherwise return as text
+      try {
+        const parsedResult = JSON.parse(result);
+        return parsedResult.image || parsedResult;
+      } catch (parseError) {
+        // If not JSON, return the text result directly
+        return result;
+      }
+      
     } catch (error) {
       console.error('Source API error:', error);
       return null;
@@ -55,4 +73,4 @@ export const searchAPI = async (query) => {
         setLoadingImage(false);
       }
     }
-  };
+};
