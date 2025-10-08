@@ -196,7 +196,8 @@ const ChatbotScreen = ({ onLogout }) => {
       text: "Hello! I'm your AI assistant. How can I help you today?", 
       sender: 'bot', 
       timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-      sources: []
+      sources: [],
+      summary: null
     }
   ]);
   const [inputText, setInputText] = useState('');
@@ -223,7 +224,8 @@ const ChatbotScreen = ({ onLogout }) => {
         text: inputText,
         sender: 'user',
         timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-        sources: []
+        sources: [],
+        summary: null
       };
       
       setMessages([...messages, newMessage]);
@@ -234,19 +236,20 @@ const ChatbotScreen = ({ onLogout }) => {
       setIsTyping(true);
       
       try {
-        // Call search API
-        const searchResults = await searchAPI(userQuery);
+        // Call search API - now returns { results, summary }
+        const searchData = await searchAPI(userQuery);
         
         setTimeout(() => {
           setIsTyping(false);
           const botResponse = {
             id: messages.length + 2,
-            text: searchResults.length > 0 
+            text: searchData.summary || (searchData.results.length > 0 
               ? "I found some relevant information for your query. Please check the sources below for detailed documentation."
-              : "I've received your message, but couldn't find specific documentation. How else can I assist you?",
+              : "I've received your message, but couldn't find specific documentation. How else can I assist you?"),
             sender: 'bot',
             timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-            sources: searchResults
+            sources: searchData.results || [],
+            summary: searchData.summary || null
           };
           setMessages(prev => [...prev, botResponse]);
         }, 1500);
@@ -258,27 +261,17 @@ const ChatbotScreen = ({ onLogout }) => {
           text: "I'm sorry, I encountered an error while searching. Please try again.",
           sender: 'bot',
           timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-          sources: []
+          sources: [],
+          summary: null
         };
         setMessages(prev => [...prev, errorResponse]);
       }
     }
   };
 
-  const handleSourceClick = async (source, pageNo, textContent = null, imageData = null) => {
-    // If both text and image are provided from search results
-    if (textContent && imageData) {
-      setSelectedImage({
-        source,
-        pageNo: pageNo || null,
-        textContent,
-        image: imageData,
-        type: 'both'
-      });
-      setSidebarOpen(true);
-    }
-    // If only text content is provided (Excel files)
-    else if (textContent) {
+  const handleSourceClick = async (source, pageNo, textContent = null) => {
+    if (textContent) {
+      // Handle Excel files with text content
       setSelectedImage({
         source,
         pageNo: null,
@@ -286,9 +279,8 @@ const ChatbotScreen = ({ onLogout }) => {
         type: 'text'
       });
       setSidebarOpen(true);
-    }
-    // If only pageNo is provided (PDF files - fetch from API)
-    else if (pageNo) {
+    } else if (pageNo) {
+      // Handle PDF files - fetch image from API using updated sourceAPI
       const imageData = await sourceAPI(source, pageNo, setLoadingImage);
       if (imageData) {
         setSelectedImage({
