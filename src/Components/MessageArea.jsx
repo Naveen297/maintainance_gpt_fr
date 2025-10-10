@@ -1,6 +1,7 @@
+
 // // ChatbotScreen/MessageArea.js
 // import React from 'react';
-// import { Bot, User, Search } from 'lucide-react';
+// import { Bot, User, Search, FileText } from 'lucide-react';
 // import SourceCard from './SourceCard';
 
 // const MessageArea = ({ messages, isTyping, isDark, handleSourceClick, messagesEndRef }) => {
@@ -32,7 +33,7 @@
 //                     ? 'bg-gray-800 text-gray-100 border border-gray-700'
 //                     : 'bg-white text-gray-800 border border-gray-200'
 //               }`}>
-//                 <p className="text-sm leading-relaxed">{message.text}</p>
+//                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
 //               </div>
               
 //               {/* Sources section for bot messages */}
@@ -107,7 +108,7 @@ import SourceCard from './SourceCard';
 const MessageArea = ({ messages, isTyping, isDark, handleSourceClick, messagesEndRef }) => {
   return (
     <div className="flex-1 px-4 py-6 overflow-y-auto font-georamalight">
-      <div className="max-w-4xl mx-auto space-y-4">
+      <div className="max-w-5xl mx-auto space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -123,7 +124,9 @@ const MessageArea = ({ messages, isTyping, isDark, handleSourceClick, messagesEn
               </div>
             )}
             
-            <div className={`group relative max-w-md ${message.sender === 'user' ? 'order-1' : ''}`}>
+            <div className={`group relative ${
+              message.sender === 'user' ? 'max-w-md order-1' : 'max-w-2xl'
+            }`}>
               <div className={`px-4 py-3 rounded-2xl transition-all duration-300 ${
                 message.sender === 'user'
                   ? isDark 
