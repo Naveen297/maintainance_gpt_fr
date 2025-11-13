@@ -7,7 +7,7 @@
 // const MessageArea = ({ messages, isTyping, isDark, handleSourceClick, messagesEndRef }) => {
 //   return (
 //     <div className="flex-1 px-4 py-6 overflow-y-auto font-georamalight">
-//       <div className="max-w-4xl mx-auto space-y-4">
+//       <div className="max-w-5xl mx-auto space-y-4">
 //         {messages.map((message) => (
 //           <div
 //             key={message.id}
@@ -23,7 +23,9 @@
 //               </div>
 //             )}
             
-//             <div className={`group relative max-w-md ${message.sender === 'user' ? 'order-1' : ''}`}>
+//             <div className={`group relative ${
+//               message.sender === 'user' ? 'max-w-md order-1' : 'max-w-2xl'
+//             }`}>
 //               <div className={`px-4 py-3 rounded-2xl transition-all duration-300 ${
 //                 message.sender === 'user'
 //                   ? isDark 
@@ -102,10 +104,10 @@
 
 // ChatbotScreen/MessageArea.js
 import React from 'react';
-import { Bot, User, Search, FileText } from 'lucide-react';
+import { Bot, User, Search, FileText, RotateCcw } from 'lucide-react';
 import SourceCard from './SourceCard';
 
-const MessageArea = ({ messages, isTyping, isDark, handleSourceClick, messagesEndRef }) => {
+const MessageArea = ({ messages, isTyping, isDark, handleSourceClick, handleRethink, messagesEndRef }) => {
   return (
     <div className="flex-1 px-4 py-6 overflow-y-auto font-georamalight">
       <div className="max-w-5xl mx-auto space-y-4">
@@ -159,12 +161,40 @@ const MessageArea = ({ messages, isTyping, isDark, handleSourceClick, messagesEn
                   ))}
                 </div>
               )}
-              
-              <p className={`text-xs mt-1 transition-colors duration-300 ${
-                message.sender === 'user' ? 'text-right' : 'text-left'
-              } ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                {message.timestamp}
-              </p>
+
+              {/* Rethink button for bot messages */}
+              {message.sender === 'bot' && message.id !== 1 && (
+                <div className="flex items-center justify-between mt-2">
+                  <p className={`text-xs transition-colors duration-300 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                    {message.timestamp}
+                  </p>
+                  <button
+                    onClick={() => handleRethink(message.id)}
+                    className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105 ${
+                      isDark
+                        ? 'bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-600'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300'
+                    }`}
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Rethink</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Timestamp only for user messages */}
+              {message.sender === 'user' && (
+                <p className={`text-xs mt-1 transition-colors duration-300 text-right ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                  {message.timestamp}
+                </p>
+              )}
+
+              {/* Timestamp only for first bot message (no rethink button) */}
+              {message.sender === 'bot' && message.id === 1 && (
+                <p className={`text-xs mt-1 transition-colors duration-300 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                  {message.timestamp}
+                </p>
+              )}
             </div>
 
             {message.sender === 'user' && (
