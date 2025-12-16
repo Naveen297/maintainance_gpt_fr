@@ -22,14 +22,14 @@
 //                 <Bot className="w-5 h-5 text-white" />
 //               </div>
 //             )}
-
+            
 //             <div className={`group relative ${
 //               message.sender === 'user' ? 'max-w-md order-1' : 'max-w-2xl'
 //             }`}>
 //               <div className={`px-4 py-3 rounded-2xl transition-all duration-300 ${
 //                 message.sender === 'user'
-//                   ? isDark
-//                     ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
+//                   ? isDark 
+//                     ? 'bg-gradient-to-r from-red-500 to-red-600 text-white' 
 //                     : 'bg-gradient-to-r from-red-400 to-red-500 text-white'
 //                   : isDark
 //                     ? 'bg-gray-800 text-gray-100 border border-gray-700'
@@ -37,7 +37,7 @@
 //               }`}>
 //                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
 //               </div>
-
+              
 //               {/* Sources section for bot messages */}
 //               {message.sender === 'bot' && message.sources && message.sources.length > 0 && (
 //                 <div className="mt-3 space-y-2">
@@ -58,7 +58,7 @@
 //                   ))}
 //                 </div>
 //               )}
-
+              
 //               <p className={`text-xs mt-1 transition-colors duration-300 ${
 //                 message.sender === 'user' ? 'text-right' : 'text-left'
 //               } ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
@@ -75,7 +75,7 @@
 //             )}
 //           </div>
 //         ))}
-
+        
 //         {isTyping && (
 //           <div className="flex items-start space-x-3">
 //             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -107,7 +107,7 @@ import React from 'react';
 import { Bot, User, Search, FileText, RotateCcw } from 'lucide-react';
 import SourceCard from './SourceCard';
 
-const MessageArea = ({ messages, isTyping, isDark, handleSourceClick, handleRethink, messagesEndRef, isStreaming }) => {
+const MessageArea = ({ messages, isTyping, isDark, handleSourceClick, handleRethink, messagesEndRef }) => {
   return (
     <div className="flex-1 px-4 py-6 overflow-y-auto font-georamalight">
       <div className="max-w-5xl mx-auto space-y-4">
@@ -125,14 +125,14 @@ const MessageArea = ({ messages, isTyping, isDark, handleSourceClick, handleReth
                 <Bot className="w-5 h-5 text-white" />
               </div>
             )}
-
+            
             <div className={`group relative ${
               message.sender === 'user' ? 'max-w-md order-1' : 'max-w-2xl'
             }`}>
               <div className={`px-4 py-3 rounded-2xl transition-all duration-300 ${
                 message.sender === 'user'
-                  ? isDark
-                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
+                  ? isDark 
+                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white' 
                     : 'bg-gradient-to-r from-red-400 to-red-500 text-white'
                   : isDark
                     ? 'bg-gray-800 text-gray-100 border border-gray-700'
@@ -140,7 +140,7 @@ const MessageArea = ({ messages, isTyping, isDark, handleSourceClick, handleReth
               }`}>
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
               </div>
-
+              
               {/* Sources section for bot messages */}
               {message.sender === 'bot' && message.sources && message.sources.length > 0 && (
                 <div className="mt-3 space-y-2">
@@ -170,20 +170,15 @@ const MessageArea = ({ messages, isTyping, isDark, handleSourceClick, handleReth
                   </p>
                   <button
                     onClick={() => handleRethink(message.id)}
-                    disabled={isStreaming}
-                    className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 
-                      ${isStreaming ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}
-                      ${
-                        isDark
-                          ? 'bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-600'
-                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300'
-                      }`}
+                    className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105 ${
+                      isDark
+                        ? 'bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-600'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300'
+                    }`}
                   >
                     <RotateCcw className="w-3 h-3" />
                     <span>Rethink</span>
                   </button>
-
-
                 </div>
               )}
 
@@ -211,7 +206,7 @@ const MessageArea = ({ messages, isTyping, isDark, handleSourceClick, handleReth
             )}
           </div>
         ))}
-
+        
         {isTyping && (
           <div className="flex items-start space-x-3">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -235,4 +230,5 @@ const MessageArea = ({ messages, isTyping, isDark, handleSourceClick, handleReth
     </div>
   );
 };
+
 export default MessageArea;
