@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import ChatbotScreen from './Components/ChatbotSceen.jsx'; // Make sure the path is correct
-import LoginPage from './Components/LoginPage.jsx'; // Make sure the path is correct
+import ChatbotScreen from './pages/ChatbotSceen';
+import LoginPage from './pages/LoginPage';
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

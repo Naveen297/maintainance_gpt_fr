@@ -10,24 +10,39 @@ export const searchAPI = async (query, rethink = false) => {
   try {
     const plantname = localStorage.getItem('selectedPlant') || '';
 
-    const response = await fetch(`${API_BASE_URL}/search`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ query, plantname, rethink }),
-    });
+    // Create an AbortController to handle timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutes timeout
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || 'Search API failed');
+    try {
+      const response = await fetch(`${API_BASE_URL}/search`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query, plantname, rethink }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Search API failed');
+      }
+
+      const data = await response.json();
+      return {
+        results: data.results || [],
+        summary: data.summary || null,
+      };
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Request timeout - The search is taking longer than expected. Please try again.');
+      }
+      throw fetchError;
     }
-
-    const data = await response.json();
-    return {
-      results: data.results || [],
-      summary: data.summary || null,
-    };
   } catch (error) {
     console.error('Search API error:', error);
     throw error;
