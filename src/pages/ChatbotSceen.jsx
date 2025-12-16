@@ -35,6 +35,10 @@ const ChatbotScreen = ({ onLogout }) => {
   const messagesEndRef = useRef(null);
   const [isStreaming, setIsStreaming] = useState(false);
 
+  // 🛑 AbortController for stopping requests
+  const abortControllerRef = useRef(null);
+  const lastResponseRef = useRef(null); // Store last response for rethink
+
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -45,6 +49,15 @@ const ChatbotScreen = ({ onLogout }) => {
     scrollToBottom();
   }, [messages]);
 
+  // 🛑 Stop handler - cancels ongoing requests
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsTyping(false);
+    setIsStreaming(false);
+  };
 
 const handleSend = async () => {
   if (!inputText.trim()) return;
@@ -81,6 +94,9 @@ const handleSend = async () => {
     }
   ]);
 
+  // 🛑 Create new AbortController
+  abortControllerRef.current = new AbortController();
+
   try {
     const result = await searchAPI(userQuery, false, (partialText) => {
       setMessages(prev => {
@@ -89,7 +105,7 @@ const handleSend = async () => {
         if (msg) msg.text = cleanStreamText(partialText);
         return updated;
       });
-    });
+    }, abortControllerRef.current.signal);
 
     // Final summary + sources
     setMessages(prev => {
@@ -106,11 +122,14 @@ const handleSend = async () => {
     });
 
   } catch (error) {
-    console.error(error);
+    if (error.name !== 'AbortError') {
+      console.error(error);
+    }
   }
 
   setIsTyping(false);
   setIsStreaming(false);   // 🔥 enable rethink buttons again
+  abortControllerRef.current = null;
 };
 
   const handleSourceClick = async (source, pageNo, textContent = null) => {
@@ -160,13 +179,38 @@ const handleSend = async () => {
   setIsTyping(true);
 
   const messageIndex = messages.findIndex(msg => msg.id === messageId);
-  if (messageIndex <= 0) return;
+  if (messageIndex <= 0) {
+    setIsTyping(false);
+    setIsStreaming(false);
+    return;
+  }
 
   const userMessage = messages[messageIndex - 1];
-  if (userMessage.sender !== "user") return;
+  if (userMessage.sender !== "user") {
+    setIsTyping(false);
+    setIsStreaming(false);
+    return;
+  }
 
   const userQuery = userMessage.text;
   const botMsgId = messageId;
+
+  // 💾 Save current message as last response before rethinking
+  const currentMsg = messages.find(m => m.id === botMsgId);
+  if (currentMsg) {
+    lastResponseRef.current = {
+      text: currentMsg.text || "I found relevant information for your query.",
+      sources: currentMsg.sources || [],
+      summary: currentMsg.summary || null
+    };
+  } else {
+    // Fallback if message not found
+    lastResponseRef.current = {
+      text: "I found relevant information for your query.",
+      sources: [],
+      summary: null
+    };
+  }
 
   // Reset previous content
   setMessages(prev => {
@@ -179,6 +223,9 @@ const handleSend = async () => {
     return updated;
   });
 
+  // 🛑 Create new AbortController
+  abortControllerRef.current = new AbortController();
+
   try {
     const result = await searchAPI(userQuery, true, (partialText) => {
       setMessages(prev => {
@@ -187,27 +234,87 @@ const handleSend = async () => {
         if (msg) msg.text = cleanStreamText(partialText);
         return updated;
       });
-    });
+    }, abortControllerRef.current.signal);
 
-    // FINAL RESULTS
-    setMessages(prev => {
-      const updated = [...prev];
-      const msg = updated.find(m => m.id === botMsgId);
+    // FINAL RESULTS (only if not aborted)
+    if (result && !result.wasAborted) {
+      setMessages(prev => {
+        const updated = [...prev];
+        const msg = updated.find(m => m.id === botMsgId);
 
-      if (msg) {
-        msg.text = result.summary || "I found relevant information after rethinking.";
-        msg.sources = result.results;   // 🔥 HERE is your FIX!
-        msg.summary = result.summary;
+        if (msg) {
+          msg.text = result.summary || "I found relevant information after rethinking.";
+          msg.sources = result.results || [];
+          msg.summary = result.summary || null;
+        }
+        return updated;
+      });
+    } else if (result && result.wasAborted) {
+      // 🛑 Restore last response when stopped
+      if (lastResponseRef.current) {
+        setMessages(prev => {
+          const updated = [...prev];
+          const msg = updated.find(m => m.id === botMsgId);
+
+          if (msg && lastResponseRef.current) {
+            msg.text = lastResponseRef.current.text || "Response stopped.";
+            msg.sources = lastResponseRef.current.sources || [];
+            msg.summary = lastResponseRef.current.summary || null;
+          }
+          return updated;
+        });
       }
-      return updated;
-    });
+    }
 
   } catch (error) {
-    console.error("Rethink error:", error);
+    if (error.name === 'AbortError') {
+      // 🛑 Restore last response when aborted
+      console.log("Request was aborted, restoring last response");
+      if (lastResponseRef.current) {
+        setMessages(prev => {
+          const updated = [...prev];
+          const msg = updated.find(m => m.id === botMsgId);
+
+          if (msg && lastResponseRef.current) {
+            msg.text = lastResponseRef.current.text || "Response stopped.";
+            msg.sources = lastResponseRef.current.sources || [];
+            msg.summary = lastResponseRef.current.summary || null;
+          }
+          return updated;
+        });
+      } else {
+        // Fallback if no saved response
+        setMessages(prev => {
+          const updated = [...prev];
+          const msg = updated.find(m => m.id === botMsgId);
+          if (msg) {
+            msg.text = "Response stopped by user.";
+            msg.sources = [];
+            msg.summary = null;
+          }
+          return updated;
+        });
+      }
+    } else {
+      console.error("Rethink error:", error);
+      // Show error message to user
+      setMessages(prev => {
+        const updated = [...prev];
+        const msg = updated.find(m => m.id === botMsgId);
+        if (msg) {
+          msg.text = "Sorry, an error occurred while rethinking. Please try again.";
+          msg.sources = [];
+          msg.summary = null;
+        }
+        return updated;
+      });
+    }
   }
 
   setIsTyping(false);
   setIsStreaming(false);   // 🔥 enable rethink buttons again
+  abortControllerRef.current = null;
+  lastResponseRef.current = null; // Clear saved response
 };
 
 
@@ -244,6 +351,8 @@ const handleSend = async () => {
         handleKeyPress={handleKeyPress}
         isTyping={isTyping}
         isDark={isDark}
+        handleStop={handleStop}
+        isStreaming={isStreaming}
       />
 
       <Footer isDark={isDark} />

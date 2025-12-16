@@ -34,7 +34,7 @@ import { API_BASE_URL } from '../constants/config';
 //   }
 // };
 
-export const searchAPI = async (query, rethink = false, onStream) => {
+export const searchAPI = async (query, rethink = false, onStream, abortSignal = null) => {
   const plantname = localStorage.getItem("selectedPlant") || "";
 
   const response = await fetch(`${API_BASE_URL}/search`, {
@@ -43,6 +43,7 @@ export const searchAPI = async (query, rethink = false, onStream) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ query, plantname, rethink }),
+    signal: abortSignal, // 🛑 Support for cancellation
   });
 
   if (!response.ok) {
@@ -56,43 +57,57 @@ export const searchAPI = async (query, rethink = false, onStream) => {
   let accumulatedText = "";
   let finalResult = null;
 
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
 
-    const chunk = decoder.decode(value, { stream: true });
-    const lines = chunk.split("\n");
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split("\n");
 
-    for (let line of lines) {
-      if (!line.startsWith("data:")) continue;
+      for (let line of lines) {
+        if (!line.startsWith("data:")) continue;
 
-      const payload = line.replace("data:", "").trim();
+        const payload = line.replace("data:", "").trim();
 
-      // 📌 FINAL RESULTS
-      if (payload.startsWith("FINAL_RESULTS::")) {
-        const jsonStr = payload.replace("FINAL_RESULTS::", "");
-        finalResult = JSON.parse(jsonStr);
-        continue;
+        // 📌 FINAL RESULTS
+        if (payload.startsWith("FINAL_RESULTS::")) {
+          const jsonStr = payload.replace("FINAL_RESULTS::", "");
+          finalResult = JSON.parse(jsonStr);
+          continue;
+        }
+
+        // 📌 END EVENT
+        if (payload === "__END__") {
+          return {
+            results: finalResult?.docs || [],
+            summary: finalResult?.summary || "",
+            wasAborted: false,
+          };
+        }
+
+        // 📌 STREAMED TEXT
+        accumulatedText += payload + "\n";
+        if (onStream) onStream(accumulatedText);
       }
-
-      // 📌 END EVENT
-      if (payload === "__END__") {
-        return {
-          results: finalResult?.docs || [],
-          summary: finalResult?.summary || "",
-        };
-      }
-
-      // 📌 STREAMED TEXT
-      accumulatedText += payload + "\n";
-      if (onStream) onStream(accumulatedText);
     }
-  }
 
-  return {
-    results: finalResult?.docs || [],
-    summary: finalResult?.summary || "",
-  };
+    return {
+      results: finalResult?.docs || [],
+      summary: finalResult?.summary || "",
+      wasAborted: false,
+    };
+  } catch (error) {
+    // Handle abort gracefully
+    if (error.name === 'AbortError') {
+      return {
+        results: finalResult?.docs || [],
+        summary: accumulatedText || "Response stopped by user.",
+        wasAborted: true,
+      };
+    }
+    throw error;
+  }
 };
 
 

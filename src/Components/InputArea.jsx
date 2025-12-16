@@ -132,9 +132,9 @@
 
 // ChatbotScreen/InputArea.js
 import React from 'react';
-import { Send, Loader } from 'lucide-react';
+import { Send, Loader, Square } from 'lucide-react';
 
-const InputArea = ({ inputText, setInputText, handleSend, handleKeyPress, isTyping, isDark }) => {
+const InputArea = ({ inputText, setInputText, handleSend, handleKeyPress, isTyping, isDark, handleStop, isStreaming }) => {
   return (
     <div className={`transition-all duration-300 ${
       isDark ? 'bg-gray-900' : 'bg-gray-50'
@@ -205,6 +205,35 @@ const InputArea = ({ inputText, setInputText, handleSend, handleKeyPress, isTypi
 
             {/* Action buttons */}
             <div className="flex items-center pb-1 space-x-2">
+              {/* Stop button - appears when streaming/typing */}
+              {isStreaming && (
+                <button
+                  onClick={handleStop}
+                  className={`relative p-3 rounded-xl transition-all duration-300 transform hover:scale-110 active:scale-95 animate-fadeIn ${
+                    isDark
+                      ? 'bg-gradient-to-br from-orange-500 to-red-600 text-white hover:from-orange-600 hover:to-red-700 shadow-lg shadow-orange-500/40 hover:shadow-xl hover:shadow-orange-500/50'
+                      : 'bg-gradient-to-br from-orange-400 to-red-500 text-white hover:from-orange-500 hover:to-red-600 shadow-lg shadow-orange-400/40 hover:shadow-xl hover:shadow-orange-400/50'
+                  } backdrop-blur-sm border border-transparent group`}
+                  title="Stop generation"
+                >
+                  <Square className="w-5 h-5 fill-current" />
+
+                  {/* Pulsing effect for stop button */}
+                  <div className={`absolute inset-0 rounded-xl ${
+                    isDark
+                      ? 'bg-gradient-to-br from-orange-400/30 to-red-600/30'
+                      : 'bg-gradient-to-br from-orange-300/30 to-red-500/30'
+                  } animate-pulse opacity-75`}></div>
+
+                  {/* Stop button glow */}
+                  <div className={`absolute -inset-1 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-md ${
+                    isDark
+                      ? 'bg-gradient-to-br from-orange-500 to-red-600'
+                      : 'bg-gradient-to-br from-orange-400 to-red-500'
+                  }`} style={{ zIndex: -1 }}></div>
+                </button>
+              )}
+
               {/* Send button */}
               <button
                 onClick={handleSend}
@@ -219,7 +248,7 @@ const InputArea = ({ inputText, setInputText, handleSend, handleKeyPress, isTypi
                       : 'bg-gray-200/80 text-gray-400 cursor-not-allowed opacity-50'
                 } backdrop-blur-sm border ${
                   inputText.trim() && !isTyping
-                    ? 'border-transparent' 
+                    ? 'border-transparent'
                     : isDark ? 'border-gray-600/30' : 'border-gray-300/30'
                 }`}
               >
@@ -228,12 +257,12 @@ const InputArea = ({ inputText, setInputText, handleSend, handleKeyPress, isTypi
                 ) : (
                   <Send className="w-5 h-5" />
                 )}
-                
+
                 {/* Send button glow effect */}
                 {inputText.trim() && !isTyping && (
                   <div className={`absolute inset-0 rounded-xl transition-opacity duration-300 ${
-                    isDark 
-                      ? 'bg-gradient-to-br from-red-400/20 to-red-600/20' 
+                    isDark
+                      ? 'bg-gradient-to-br from-red-400/20 to-red-600/20'
                       : 'bg-gradient-to-br from-red-300/20 to-red-500/20'
                   } opacity-0 hover:opacity-100`}></div>
                 )}
