@@ -99,10 +99,22 @@
 // export default Header;
 
 // ChatbotScreen/Header.js
-import React from 'react';
-import { Sun, Moon, Settings, User, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sun, Moon, Settings, User, ChevronDown, Factory } from 'lucide-react';
 
 const Header = ({ isDark, toggleTheme, showUserMenu, setShowUserMenu, onLogout }) => {
+  const [plantName, setPlantName] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+
+  useEffect(() => {
+    // Get plant name and email from localStorage
+    const storedPlant = localStorage.getItem('selectedPlant');
+    const storedEmail = localStorage.getItem('userEmail');
+
+    if (storedPlant) setPlantName(storedPlant);
+    if (storedEmail) setUserEmail(storedEmail);
+  }, []);
+
   return (
     <header className={`relative flex items-center justify-between px-8 py-4 border-b transition-all duration-300 ${
       isDark ? 'bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border-gray-700' : 'bg-gradient-to-r from-white via-gray-50 to-white border-gray-200'
@@ -130,6 +142,16 @@ const Header = ({ isDark, toggleTheme, showUserMenu, setShowUserMenu, onLogout }
             Intelligent Operations Platform
           </div>
         </div>
+
+        {/* Plant name badge */}
+        {plantName && (
+          <div className={`flex items-center space-x-2 px-4 py-2 rounded-lg border ${
+            isDark ? 'bg-gray-800/50 border-gray-700 text-gray-300' : 'bg-gray-100 border-gray-300 text-gray-700'
+          }`}>
+            <Factory className="w-4 h-4 text-red-500" />
+            <span className="text-sm font-medium">{plantName}</span>
+          </div>
+        )}
       </div>
 
       {/* Right side - Controls */}
@@ -172,7 +194,14 @@ const Header = ({ isDark, toggleTheme, showUserMenu, setShowUserMenu, onLogout }
             }`}>
               <div className="py-2">
                 <div className={`px-4 py-2 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-                  <div className={`font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>Admin</div>
+                  <div className={`font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                    {userEmail || 'Admin'}
+                  </div>
+                  {plantName && (
+                    <div className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {plantName}
+                    </div>
+                  )}
                 </div>
                 <button className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 ${isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700'}`}>
                   Profile Settings

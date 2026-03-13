@@ -388,10 +388,29 @@ const LoginPage = ({ onLogin }) => {
 
       setIsLoading(false);
 
+      // Define valid credentials with plant validation
+      const validCredentials = [
+        { email: 'admin@mahindra.com', password: 'admin', allowedPlants: ['Nashik Tool and Die', 'Chakan', 'ept'] },
+        { email: 'nashik2@mahindra.com', password: 'nashik2', allowedPlants: ['Nashik Tool and Die'] },
+        { email: 'ept@mahindra.com', password: 'ept', allowedPlants: ['ept'] },
+        { email: 'chakan@mahindra.com', password: 'chakan', allowedPlants: ['Chakan'] }
+      ];
+
       // Check credentials
-      if (email === 'admin@mahindra.com' && password === 'admin') {
-        // Store plant name in localStorage
+      const user = validCredentials.find(
+        cred => cred.email === email && cred.password === password
+      );
+
+      if (user) {
+        // Validate plant selection
+        if (!user.allowedPlants.includes(plant)) {
+          setError(`Invalid plant selection. ${user.email} can only access: ${user.allowedPlants.join(', ')}`);
+          return;
+        }
+
+        // Store plant name and user email in localStorage
         localStorage.setItem('selectedPlant', plant);
+        localStorage.setItem('userEmail', email);
         onLogin();
       } else {
         setError('Invalid email or password. Please try again.');
@@ -403,7 +422,7 @@ const LoginPage = ({ onLogin }) => {
     }
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       handleLogin();
     }
@@ -541,7 +560,7 @@ const LoginPage = ({ onLogin }) => {
                   onChange={(e) => setEmail(e.target.value)}
                   onFocus={() => setFocusedInput('email')}
                   onBlur={() => setFocusedInput('')}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyDown}
                   placeholder="Enter your email address"
                   className="w-full py-4 pl-12 pr-4 text-sm text-white bg-transparent border-0 outline-none placeholder-slate-400"
                 />
@@ -567,7 +586,7 @@ const LoginPage = ({ onLogin }) => {
                   onChange={(e) => setPassword(e.target.value)}
                   onFocus={() => setFocusedInput('password')}
                   onBlur={() => setFocusedInput('')}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyDown}
                   placeholder="Enter your password"
                   className="w-full py-4 pl-12 pr-12 text-sm text-white bg-transparent border-0 outline-none placeholder-slate-400"
                 />
