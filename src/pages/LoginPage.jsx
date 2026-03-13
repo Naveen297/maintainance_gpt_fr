@@ -369,6 +369,33 @@ const LoginPage = ({ onLogin }) => {
     setError('');
     setIsLoading(true);
 
+    // Define valid credentials with plant validation
+    const validCredentials = [
+      { email: 'admin@mahindra.com', password: 'admin', allowedPlants: ['Nashik Tool and Die', 'Chakan', 'ept'] },
+      { email: 'nashik2@mahindra.com', password: 'nashik2', allowedPlants: ['Nashik Tool and Die'] },
+      { email: 'ept@mahindra.com', password: 'ept', allowedPlants: ['ept'] },
+      { email: 'chakan@mahindra.com', password: 'chakan', allowedPlants: ['Chakan'] }
+    ];
+
+    // Check credentials FIRST
+    const user = validCredentials.find(
+      cred => cred.email === email && cred.password === password
+    );
+
+    if (!user) {
+      setIsLoading(false);
+      setError('Invalid email or password. Please try again.');
+      return;
+    }
+
+    // Validate plant selection
+    if (!user.allowedPlants.includes(plant)) {
+      setIsLoading(false);
+      setError(`Invalid plant selection. ${user.email} can only access: ${user.allowedPlants.join(', ')}`);
+      return;
+    }
+
+    // Credentials are valid, now try to call API (but don't block login if it fails)
     try {
       // Call /clearsessions API
       const response = await fetch(`${API_BASE_URL}/search-img`, {
@@ -376,50 +403,24 @@ const LoginPage = ({ onLogin }) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        // body: JSON.stringify({}),
       });
 
       console.log('Clearsessions full API URL', `${API_BASE_URL}/clearsessions`);
       console.log('Clearsessions API response:', response);
-
-
-      // Wait for a brief moment to simulate processing
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      setIsLoading(false);
-
-      // Define valid credentials with plant validation
-      const validCredentials = [
-        { email: 'admin@mahindra.com', password: 'admin', allowedPlants: ['Nashik Tool and Die', 'Chakan', 'ept'] },
-        { email: 'nashik2@mahindra.com', password: 'nashik2', allowedPlants: ['Nashik Tool and Die'] },
-        { email: 'ept@mahindra.com', password: 'ept', allowedPlants: ['ept'] },
-        { email: 'chakan@mahindra.com', password: 'chakan', allowedPlants: ['Chakan'] }
-      ];
-
-      // Check credentials
-      const user = validCredentials.find(
-        cred => cred.email === email && cred.password === password
-      );
-
-      if (user) {
-        // Validate plant selection
-        if (!user.allowedPlants.includes(plant)) {
-          setError(`Invalid plant selection. ${user.email} can only access: ${user.allowedPlants.join(', ')}`);
-          return;
-        }
-
-        // Store plant name and user email in localStorage
-        localStorage.setItem('selectedPlant', plant);
-        localStorage.setItem('userEmail', email);
-        onLogin();
-      } else {
-        setError('Invalid email or password. Please try again.');
-      }
     } catch (error) {
+      // Log the error but don't prevent login
       console.error('Error calling clearsessions API:', error);
-      setIsLoading(false);
-      setError('An error occurred. Please try again.');
     }
+
+    // Wait for a brief moment to simulate processing
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    setIsLoading(false);
+
+    // Store plant name and user email in localStorage
+    localStorage.setItem('selectedPlant', plant);
+    localStorage.setItem('userEmail', email);
+    onLogin();
   };
 
   const handleKeyDown = (e) => {

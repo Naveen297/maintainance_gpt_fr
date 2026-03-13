@@ -9,3 +9,14 @@ Currently, two official plugins are available:
 # spotweilding
 # spot-welding-dashboard
 # maintainance_gpt_fr
+
+
+<!--   - nashik2@mahindra.com / password: nashik2 (can only access "Nashik Tool and Die")
+  - ept@mahindra.com / password: ept (can only access "ept")
+  - chakan@mahindra.com / password: chakan (can only access "Chakan")
+  - admin@mahindra.com / password: admin (can access all plants) -->
+
+    - nashik2@mahindra.com / password: nashik2 (can only access "Nashik Tool and Die")
+  - ept@mahindra.com / password: ept (can only access "ept")
+  - chakan@mahindra.com / password: chakan (can only access "Chakan")
+  - admin@mahindra.com / password: admin (can access all plants)
