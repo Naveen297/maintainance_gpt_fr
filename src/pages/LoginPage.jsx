@@ -371,10 +371,11 @@ const LoginPage = ({ onLogin }) => {
 
     // Define valid credentials with plant validation
     const validCredentials = [
-      { email: 'admin@mahindra.com', password: 'admin', allowedPlants: ['Nashik Tool and Die', 'Chakan', 'ept'] },
+      { email: 'admin@mahindra.com', password: 'admin', allowedPlants: ['Nashik Tool and Die', 'Chakan', 'ept', 'nasik_plan_1'] },
       { email: 'nashik2@mahindra.com', password: 'nashik2', allowedPlants: ['Nashik Tool and Die'] },
       { email: 'ept@mahindra.com', password: 'ept', allowedPlants: ['ept'] },
-      { email: 'chakan@mahindra.com', password: 'chakan', allowedPlants: ['Chakan'] }
+      { email: 'chakan@mahindra.com', password: 'chakan', allowedPlants: ['Chakan'] },
+      { email: 'nasik1@mahindra.com', password: 'nasik1', allowedPlants: ['nasik_plan_1'] }
     ];
 
     // Check credentials FIRST
@@ -631,6 +632,7 @@ const LoginPage = ({ onLogin }) => {
                   <option value="Nashik Tool and Die" className="text-white bg-slate-800">Nashik Tool and Die</option>
                   <option value="Chakan" className="text-white bg-slate-800">Chakan</option>
                   <option value="ept" className="text-white bg-slate-800">EPT</option>
+                  <option value="nasik_plan_1" className="text-white bg-slate-800">Nasik Plant 1</option>
                 </select>
                 {focusedInput === 'plant' && (
                   <div className="absolute inset-0 pointer-events-none bg-gradient-to-r rounded-xl from-red-500/5 to-red-600/5"></div>
